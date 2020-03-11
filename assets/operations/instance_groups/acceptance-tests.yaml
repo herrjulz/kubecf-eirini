@@ -1,0 +1,34 @@
+{{- if .Values.testing.cf_acceptance_tests.enabled -}}
+
+- path: /instance_groups/-
+  type: replace
+  value:
+    azs:
+    - z1
+    instances: 1
+    jobs:
+    - name: acceptance-tests
+      properties:
+        acceptance_tests:
+          admin_password: ((cf_admin_password))
+          admin_user: admin
+          api: api.((system_domain))
+          apps_domain: ((system_domain))
+          credhub_client: credhub_admin_client
+          credhub_mode: assisted
+          credhub_secret: ((credhub_admin_client_secret))
+          include: '+credhub,+tcp_routing'
+          skip_ssl_validation: true
+        bpm:
+          enabled: true
+      release: cf-acceptance-tests
+    lifecycle: errand
+    name: acceptance-tests
+    networks:
+    - name: default
+    stemcell: default
+    update:
+      serial: true
+    vm_type: minimal
+
+{{- end }}

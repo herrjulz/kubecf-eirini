@@ -1,0 +1,56 @@
+{{- $root := . -}}
+---
+apiVersion: quarks.cloudfoundry.org/v1alpha1
+kind: BOSHDeployment
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    app.kubernetes.io/instance: {{ .Release.Name | quote }}
+    app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+    app.kubernetes.io/name: {{ include "kubecf.fullname" . }}
+    app.kubernetes.io/version: {{ default .Chart.Version .Chart.AppVersion | quote }}
+    helm.sh/chart: {{ include "kubecf.chart" . }}
+spec:
+  manifest:
+    name: {{ .Release.Name }}-cf-deployment
+    type: configmap
+  ops:
+  - name: {{ include "kubecf.ops-name" (dict "ReleaseName" $root.Release.Name "Path" "assets/operations/unordered/move_auctioneer.yaml") }}
+    type: configmap
+  - name: {{ include "kubecf.ops-name" (dict "ReleaseName" $root.Release.Name "Path" "assets/operations/unordered/move_routing_api.yaml") }}
+    type: configmap
+{{- if .Values.features.suse_buildpacks.enabled }}
+  - name: {{ include "kubecf.ops-name" (dict "ReleaseName" $root.Release.Name "Path" "assets/operations/buildpacks/set_suse_buildpacks.yaml") }}
+    type: configmap
+{{- end }}
+{{- if .Values.features.eirini.enabled }}
+  - name: {{ $root.Release.Name }}-ops-use-bits-service
+    type: configmap
+{{- end }}
+{{- range $path, $bytes := .Files.Glob "assets/operations/instance_groups/*" }}
+  - name: {{ include "kubecf.ops-name" (dict "ReleaseName" $root.Release.Name "Path" $path) }}
+    type: configmap
+{{- end }}
+{{- range $path, $bytes := .Files.Glob "assets/operations/temporary/*" }}
+  - name: {{ include "kubecf.ops-name" (dict "ReleaseName" $root.Release.Name "Path" $path) }}
+    type: configmap
+{{- end }}
+  - name: {{ .Release.Name }}-ops-sizing
+    type: configmap
+  - name: {{ .Release.Name }}-ops-azs
+    type: configmap
+{{- range $path, $bytes := .Files.Glob "assets/operations/*" }}
+  - name: {{ include "kubecf.ops-name" (dict "ReleaseName" $root.Release.Name "Path" $path) }}
+    type: configmap
+{{- end }}
+{{- if or (.Values.features.eirini.enabled) (.Values.features.eirini_native.enabled) }}
+  - name: {{ $root.Release.Name }}-ops-remove-diego
+    type: configmap
+{{- end }}
+{{- range $_, $ops := .Values.operations.custom }}
+  - name: {{ $ops | quote }}
+    type: configmap
+{{- end }}
+  - name: {{ .Release.Name }}-user-provided-properties
+    type: configmap
