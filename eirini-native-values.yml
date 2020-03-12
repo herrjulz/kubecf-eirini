@@ -1,0 +1,35 @@
+eirini:
+  opi:
+    ingress_endpoint: <cluster-ingress-hostname>
+    use_registry_ingress: true
+  kube:
+    external_ips: []
+bits:
+  env:
+    DOMAIN: <domain>
+  ingress:
+    endpoint: <cluster-ingress-hostname>
+    use: true
+  kube:
+    external_ips: []
+  secrets:
+    BITS_SERVICE_SECRET: changeme
+    BITS_SERVICE_SIGNING_USER_PASSWORD: changeme
+
+system_domain: <domain>
+kube:
+  storage_class: ibmc-block-gold
+  service_cluster_ip_range: '172.21.0.0/16'
+  pod_cluster_ip_range: '172.30.0.0/16'
+services:
+  router:
+    externalIPs: []
+sizing:
+  diego_api:
+    instances: 0
+  diego_cell:
+    instances: 0
+
+features:
+  eirini_native:
+    enabled: true
