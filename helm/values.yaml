@@ -237,6 +237,7 @@ settings:
 features:
   eirini:
     enabled: false
+    use_helm_release: false
     registry:
       service:
         nodePort: 32123
