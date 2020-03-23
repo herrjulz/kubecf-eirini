@@ -1,4 +1,4 @@
-{{- if not .Values.features.eirini.enabled -}}
+{{- if not .Values.features.eirini.enabled }}
 
 {{- if .Values.features.suse_buildpacks.enabled }}
 - type: replace
@@ -10,13 +10,20 @@
       sle15-rootfs:
         trusted_certs:
         - ((diego_instance_identity_ca.ca))
-        - ((credhub_tls.ca))
         - ((uaa_ssl.ca))
 
 - type: replace
   path: /instance_groups/name=diego-cell/jobs/name=sle15-rootfs-setup/properties/quarks?/bpm/processes
   value: []
+
+{{- if .Values.features.credhub.enabled }}
+- path: /instance_groups/name=diego-cell/jobs/name=sle15-rootfs-setup/properties/sle15-rootfs/trusted_certs/-
+  type: replace
+  value: ((credhub_tls.ca))
 {{- end }}
+
+{{- end }}
+
 
 # Selectively remove jobs temporarily.
 - type: remove
@@ -153,7 +160,7 @@
   path: /instance_groups/name=diego-cell/jobs/name=garden/properties?/garden?/disable_swap_limit?
   value: true
 
-{{- $root := . -}}
+{{- $root := . }}
 {{- if .Values.features.suse_buildpacks.enabled }}
 {{- range $path, $bytes := .Files.Glob "assets/operations/pre_render_scripts/diego-cell_*" }}
 {{ $root.Files.Get $path }}

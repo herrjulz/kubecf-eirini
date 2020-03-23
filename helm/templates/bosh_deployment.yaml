@@ -1,4 +1,4 @@
-{{- $root := . -}}
+{{- $root := . }}
 ---
 apiVersion: quarks.cloudfoundry.org/v1alpha1
 kind: BOSHDeployment
@@ -44,7 +44,7 @@ spec:
   - name: {{ include "kubecf.ops-name" (dict "ReleaseName" $root.Release.Name "Path" $path) }}
     type: configmap
 {{- end }}
-{{- if or (.Values.features.eirini.enabled) (.Values.features.eirini_native.enabled) }}
+{{- if .Values.features.eirini.enabled }}
   - name: {{ $root.Release.Name }}-ops-remove-diego
     type: configmap
 {{- end }}
