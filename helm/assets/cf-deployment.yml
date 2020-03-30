@@ -193,7 +193,7 @@ addons:
       - domain: locket.service.cf.internal
         targets:
         - query: '*'
-          instance_group: diego-api
+          instance_group: locket
           deployment: cf
           network: default
           domain: bosh
