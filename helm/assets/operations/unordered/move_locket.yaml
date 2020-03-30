@@ -4,35 +4,7 @@
   value:
     name: locket
     jobs:
-    - name: locket
-      release: diego
-      properties:
-        bpm:
-          enabled: true
-        tls:
-          ca_cert: "((diego_locket_server.ca))"
-          cert: "((diego_locket_server.certificate))"
-          key: "((diego_locket_server.private_key))"
-        diego:
-          locket:
-            sql:
-              db_host: sql-db.service.cf.internal
-              db_port: 3306
-              db_schema: locket
-              db_username: locket
-              db_password: "((locket_database_password))"
-              db_driver: mysql
-              ca_cert: "((mysql_server_certificate.ca))"
-              require_ssl: true
-        enable_consul_service_registration: false
-        loggregator:
-          use_v2_api: true
-          ca_cert: "((loggregator_tls_agent.ca))"
-          cert: "((loggregator_tls_agent.certificate))"
-          key: "((loggregator_tls_agent.private_key))"
-        logging:
-          format:
-            timestamp: "rfc3339"
+    - {{- .Files.Get "assets/jobs/locket_job.yaml" | nindent 6 }}
 
 # Override the addresses for the jobs under the diego-api instance group.
 - type: replace
