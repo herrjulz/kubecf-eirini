@@ -34,3 +34,70 @@
           format:
             timestamp: "rfc3339"
 
+# Override the addresses for the jobs under the diego-api instance group.
+- type: replace
+  path: /variables/name=diego_bbs_server/options?/alternative_names?/-
+  value: '127.0.0.1'
+- type: replace
+  path: /variables/name=diego_locket_server/options?/alternative_names?/-
+  value: '127.0.0.1'
+
+# Disable tuning /proc/sys kernel parameters as locket and bbs are running on containers.
+- type: replace
+  path: /instance_groups/name=locket/jobs/name=locket/properties/set_kernel_parameters?
+  value: false
+
+# Add quarks properties for locket.
+- type: replace
+  path: /instance_groups/name=locket/jobs/name=locket/properties/quarks?
+  value:
+    ports:
+    - name: locket
+      protocol: TCP
+      internal: 8891
+    run:
+      healthcheck:
+        locket:
+          readiness:
+            exec:
+              command:
+              - /var/vcap/packages/cfdot/bin/cfdot
+              - locks
+              - --locketAPILocation=localhost:8891
+              # We need to both give --skipCertVerify and provide a CA cert;
+              # skipping the former ends up with context deadline exceeded, and
+              # skipping the latter errors out failing to read file ""
+              - --skipCertVerify
+              - --caCertFile=/var/vcap/jobs/locket/config/certs/ca.crt
+              - --clientCertFile=/var/vcap/jobs/locket/config/certs/server.crt
+              - --clientKeyFile=/var/vcap/jobs/locket/config/certs/server.key
+
+
+- type: replace
+  path: /instance_groups/name=locket/jobs/name=locket/properties/quarks?/pre_render_scripts/jobs/-
+  value: |
+    #!/usr/bin/env bash
+    
+    set -o errexit -o nounset
+    
+    target="/var/vcap/all-releases/jobs-src/diego/locket/templates/locket_ctl.erb"
+    sentinel="${target}.patch_sentinel"
+    if [[ -f "${sentinel}" ]]; then
+      echo "Patch already applied. Skipping"
+      exit 0
+    fi
+    
+    patch --verbose "${target}" <<'EOT'
+    @@ -26,9 +26,6 @@
+    
+         $bin_dir/set-locket-kernel-params
+    
+    -    # Allowed number of open file descriptors
+    -    ulimit -n 100000
+    -
+         exec chpst -u vcap:vcap bash -c  '/var/vcap/jobs/locket/bin/locket_as_vcap'
+    
+         ;;
+    EOT
+    
+    touch "${sentinel}"
