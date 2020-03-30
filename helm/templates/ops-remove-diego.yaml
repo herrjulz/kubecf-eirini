@@ -16,6 +16,8 @@ data:
     # Remove the whole diego-cell instance group.
     - type: remove
       path: /instance_groups/name=diego-cell
+    - type: remove
+      path: /instance_groups/name=diego-api
 
     # Remove bbs from diego-api.
     # TODO: remove bbs in the future - when the clock and worker no longer need it.
